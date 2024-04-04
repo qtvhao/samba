@@ -22,6 +22,7 @@ services:
     network_mode: host
     entrypoint: /bin/sh
     privileged: true
+    restart: "no"
     depends_on:
       samba:
         condition: service_healthy
