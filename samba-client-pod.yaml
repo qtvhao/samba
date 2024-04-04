@@ -16,9 +16,9 @@ spec:
           set -xe;
           mkdir -p /mnt/smb_share;
           mount -t cifs //10.43.165.27/Data /mnt/smb_share -o username=samba,password=secret;
-          echo 'Hello, Samba!' > /mnt/smb_share/hello.txt;
-          smbclient //10.43.165.27/Data -U samba%secret -c 'get hello.txt /hello.txt';
-          cat /hello.txt;
+          echo 'Hello, Samba!' > /mnt/smb_share/hello-12538.txt;
+          smbclient //10.43.165.27/Data -U samba%secret -c 'get hello-12538.txt /hello-12538.txt';
+          cat /hello-12538.txt;
       command:
         - /bin/sh
       image: ghcr.io/qtvhao/samba-client:main
