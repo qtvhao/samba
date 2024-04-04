@@ -8,9 +8,33 @@ services:
       PASS: "secret"
       UID: 1000    # Optional, default 1000
       GID: 1000    # Optional, default 1000
-      RW: true     # Optional, default true
     ports:
       - 445:445
     volumes:
       - /home/example:/storage
     restart: on-failure
+    networks:
+      samba:
+        ipv4_address: 203.0.112.2
+  samba-client:
+    image: ghcr.io/qtvhao/samba-client:main
+    container_name: samba-client
+    network_mode: host
+    entrypoint: /bin/sh
+    privileged: true
+    depends_on:
+      samba:
+        condition: service_healthy
+    command: |
+      -c "set -xe;
+      mkdir -p /mnt/smb_share;
+      mount -t cifs //203.0.112.2/Data /mnt/smb_share -o username=samba,password=secret;
+      echo 'Hello, Samba!' > /mnt/smb_share/hello.txt;
+      smbclient //203.0.112.2/Data -U samba%secret -c 'get hello.txt /hello.txt';
+      cat /hello.txt;"
+networks:
+  samba:
+    ipam:
+      driver: default
+      config:
+        - subnet: 203.0.112.0/24

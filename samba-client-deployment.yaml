@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f ./docker-compose.yml
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: samba-client
+  name: samba-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: samba-client
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f ./docker-compose.yml
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/samba-default: "true"
+        io.kompose.service: samba-client
+    spec:
+      containers:
+        - args:
+            - -c
+            - |-
+              set -xe;
+              mkdir -p /mnt/smb_share;
+              mount -t cifs //203.0.112.2/Data /mnt/smb_share -o username=samba,password=secret;
+              echo 'Hello, Samba!' > /mnt/smb_share/hello.txt;
+              smbclient //203.0.112.2/Data -U samba%secret -c 'get hello.txt /hello.txt';
+              cat /hello.txt;
+          command:
+            - /bin/sh
+          image: ghcr.io/qtvhao/samba-client:main
+          name: samba-client
+          securityContext:
+            privileged: true
+      restartPolicy: Always
