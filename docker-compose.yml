@@ -12,7 +12,7 @@ services:
       - 445:445
     volumes:
       - /home/example:/storage
-    restart: on-failure
+    restart: always
     networks:
       samba:
         ipv4_address: 203.0.112.2
