@@ -14,8 +14,12 @@ CLUSTER_IP=$(kubectl get svc samba -o jsonpath='{.spec.clusterIP}')
 sed -i "s/203.0.112.2/$CLUSTER_IP/g" samba-client-pod.yaml
 kubectl delete pod samba-client || true
 kubectl apply -f samba-client-pod.yaml
-# docker-compose up -d
-# docker-compose logs -f
+docker-compose down
+mkdir -p ./samba-storage/
+chmod -R 0777 ./samba-storage/
+docker-compose up -d samba
+docker-compose up -d
+docker-compose logs -f
 while true; do
     kubectl logs pod/samba-client -f && break || true
     sleep 8

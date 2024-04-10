@@ -11,16 +11,17 @@ services:
     ports:
       - 445:445
     volumes:
-      - /home/example:/storage
+      - ./samba-storage/:/storage
     restart: always
     networks:
       samba:
         ipv4_address: 203.0.112.2
   redis:
-    image: bitnami/redis:latest
+    image: ghcr.io/qtvhao/redis:main
     container_name: redis
     # entrypoint: /opt/bitnami/scripts/redis/entrypoint.sh
     # command: /opt/bitnami/scripts/redis/run.sh
+    privileged: true
     entrypoint: /bin/sh
     command: |
       -c "set -xe;
@@ -28,6 +29,7 @@ services:
       smbclient //203.0.112.2/Data -U samba%secret -c 'mkdir bitnami-redis-data';
       mount -t cifs //203.0.112.2/Data/bitnami-redis-data /bitnami/redis/data -o username=samba,password=secret;
       echo 'Hello, Samba!' > /bitnami/redis/data/hello-$RANDOM.txt;
+      mkdir -p /bitnami/redis/data/appendonlydir;
       smbclient //203.0.112.2/Data -U samba%secret -c 'get bitnami-redis-data/hello-$RANDOM.txt /hello-$RANDOM.txt';
       /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh"
     environment:
