@@ -16,6 +16,19 @@ services:
     networks:
       samba:
         ipv4_address: 203.0.112.2
+  redis-init:
+    image: ghcr.io/qtvhao/redis:main
+    container_name: redis-init
+    environment:
+      - REDIS_PASSWORD=secret
+      - REDIS_AOF_ENABLED=no
+    volumes:
+      - ./samba-storage/bitnami-redis-data:/bitnami/redis/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "secret", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
   redis:
     image: ghcr.io/qtvhao/redis:main
     container_name: redis
@@ -34,12 +47,13 @@ services:
       /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh"
     environment:
       - REDIS_PASSWORD=secret
+      - REDIS_AOF_ENABLED=no
     networks:
       samba:
         ipv4_address: 203.0.112.3
     depends_on:
-      samba-client:
-        condition: service_started
+      redis-init:
+        condition: service_healthy
   samba-client:
     image: ghcr.io/qtvhao/samba-client:main
     container_name: samba-client
