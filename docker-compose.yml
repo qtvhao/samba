@@ -16,6 +16,17 @@ services:
     networks:
       samba:
         ipv4_address: 203.0.112.2
+  redis:
+    image: bitnami/redis:latest
+    container_name: redis
+    restart: always
+    entrypoint: /opt/bitnami/scripts/redis/entrypoint.sh
+    command: /opt/bitnami/scripts/redis/run.sh
+    environment:
+      - REDIS_PASSWORD=secret
+    networks:
+      samba:
+        ipv4_address: 203.0.112.3
   samba-client:
     image: ghcr.io/qtvhao/samba-client:main
     container_name: samba-client
