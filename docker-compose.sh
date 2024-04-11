@@ -17,9 +17,9 @@ kubectl apply -f samba-client-pod.yaml
 docker-compose down
 mkdir -p ./samba-storage/
 chmod -R 0777 ./samba-storage/
-docker-compose up -d samba
-docker-compose up -d
-docker-compose logs -f
+# docker-compose up -d samba
+# docker-compose up -d
+# docker-compose logs -f
 while true; do
     kubectl logs pod/samba-client -f && break || true
     sleep 8

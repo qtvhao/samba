@@ -29,13 +29,15 @@ spec:
               mkdir -p /bitnami/redis/data;
               smbclient //203.0.112.2/Data -U samba%secret -c 'mkdir bitnami-redis-data';
               mount -t cifs //203.0.112.2/Data/bitnami-redis-data /bitnami/redis/data -o username=samba,password=secret;
-              echo 'Hello, Samba!' > /bitnami/redis/data/hello-8746.txt;
+              echo 'Hello, Samba!' > /bitnami/redis/data/hello-23139.txt;
               mkdir -p /bitnami/redis/data/appendonlydir;
-              smbclient //203.0.112.2/Data -U samba%secret -c 'get bitnami-redis-data/hello-8746.txt /hello-8746.txt';
+              smbclient //203.0.112.2/Data -U samba%secret -c 'get bitnami-redis-data/hello-23139.txt /hello-23139.txt';
               /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh
           command:
             - /bin/sh
           env:
+            - name: REDIS_AOF_ENABLED
+              value: "no"
             - name: REDIS_PASSWORD
               value: secret
           image: ghcr.io/qtvhao/redis:main
