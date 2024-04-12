@@ -17,6 +17,12 @@ services:
     networks:
       samba:
         ipv4_address: 203.0.112.2
+        # nc -z localhost 445
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "445"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
   redis-init:
     stop_grace_period: 1s
     image: ghcr.io/qtvhao/redis:main
@@ -78,9 +84,9 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "secret", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
+      interval: 1s
+      timeout: 1s
+      retries: 20
   samba-client:
     image: ghcr.io/qtvhao/samba-client:main
     container_name: samba-client
