@@ -1,6 +1,7 @@
 version: "3"
 services:
   samba:
+    stop_grace_period: 1s
     image: dockurr/samba
     container_name: samba
     environment:
@@ -17,6 +18,7 @@ services:
       samba:
         ipv4_address: 203.0.112.2
   redis-init:
+    stop_grace_period: 1s
     image: ghcr.io/qtvhao/redis:main
     container_name: redis-init
     environment:
@@ -29,7 +31,27 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
+  redis-cli:
+    stop_grace_period: 1s
+    image: ghcr.io/qtvhao/redis:main
+    container_name: redis-cli
+    # entrypoint: /opt/bitnami/scripts/redis/entrypoint.sh
+    # command: /opt/bitnami/scripts/redis/run.sh
+    privileged: true
+    entrypoint: /bin/sh
+    command: |
+      -c "set -xe;
+      redis-cli -a secret -h redis set hello-$RANDOM world; 
+      redis-cli -a secret -h redis get hello-$RANDOM;
+      redis-cli -a secret -h redis save
+      "
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - samba
   redis:
+    stop_grace_period: 1s
     image: ghcr.io/qtvhao/redis:main
     container_name: redis
     # entrypoint: /opt/bitnami/scripts/redis/entrypoint.sh
@@ -54,6 +76,11 @@ services:
     depends_on:
       redis-init:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "secret", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
   samba-client:
     image: ghcr.io/qtvhao/samba-client:main
     container_name: samba-client
