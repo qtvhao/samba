@@ -1,0 +1,3 @@
+FROM ghcr.io/qtvhao/redis:main
+
+COPY redis-backup-service.sh .

@@ -52,7 +52,6 @@ services:
       -c "set -xe;
       redis-cli -a secret -h redis set hello-$RANDOM world; 
       redis-cli -a secret -h redis get hello-$RANDOM;
-      redis-cli -a secret -h redis save
       "
     depends_on:
       redis:
@@ -61,7 +60,9 @@ services:
       - samba
   redis:
     # stop_grace_period: 1s
-    image: ghcr.io/qtvhao/redis:main
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
     container_name: redis
     # entrypoint: /opt/bitnami/scripts/redis/entrypoint.sh
     # command: /opt/bitnami/scripts/redis/run.sh
@@ -72,8 +73,8 @@ services:
       mkdir -p /bitnami/redis/data/appendonlydir;
       smbclient //203.0.112.2/Data -U samba%secret -c "mkdir bitnami-redis-data-appendonlydir";
       mount -t cifs //203.0.112.2/Data/bitnami-redis-data-appendonlydir /bitnami/redis/data/appendonlydir -o username=samba,password=secret;
-      trap "echo The script is terminated; exit" SIGTERM SIGINT SIGKILL;
-      /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh'
+      bash redis-backup-service.sh
+      '
     environment:
       - REDIS_PASSWORD=secret
       - REDIS_AOF_ENABLED=no
