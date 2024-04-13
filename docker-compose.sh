@@ -6,7 +6,7 @@ which kompose || (curl -L https://github.com/kubernetes/kompose/releases/downloa
 
 export RANDOM=`date +%s`
 kompose convert -f ./docker-compose.yml
-FILE="samba-service.yaml samba-deployment.yaml samba-claim0-persistentvolumeclaim.yaml"
+FILE="samba-deployment.yaml samba-service.yaml samba-client-pod.yaml redis-deployment.yaml samba-claim0-persistentvolumeclaim.yaml"
 for f in $FILE; do
     # kubectl apply -f $f
     echo "kubectl apply -f $f"
@@ -18,6 +18,7 @@ done
 docker-compose down
 mkdir -p ./samba-storage/
 chmod -R 0777 ./samba-storage/
+docker-compose pull
 docker-compose up --build
 # docker-compose logs -f
 exit 0

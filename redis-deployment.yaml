@@ -37,7 +37,7 @@ spec:
               value: "no"
             - name: REDIS_PASSWORD
               value: secret
-          image: redis
+          image: ghcr.io/qtvhao/redis:main
           livenessProbe:
             exec:
               command:
