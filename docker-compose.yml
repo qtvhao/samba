@@ -40,24 +40,23 @@ services:
   #   depends_on:
   #     samba-client:
   #       condition: service_completed_successfully
-  redis-cli:
-    stop_grace_period: 30s
-    image: ghcr.io/qtvhao/redis:main
-    container_name: redis-cli
-    # entrypoint: /opt/bitnami/scripts/redis/entrypoint.sh
-    # command: /opt/bitnami/scripts/redis/run.sh
-    privileged: true
-    entrypoint: /bin/sh
-    command: |
-      -c "set -xe;
-      redis-cli -a secret -h redis set hello-$RANDOM world; 
-      redis-cli -a secret -h redis get hello-$RANDOM;
-      "
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - samba
+  # redis-cli:
+  #   stop_grace_period: 30s
+  #   image: ghcr.io/qtvhao/redis:main
+  #   container_name: redis-cli
+  #   # entrypoint: /opt/bitnami/scripts/redis/entrypoint.sh
+  #   # command: /opt/bitnami/scripts/redis/run.sh
+  #   privileged: true
+  #   entrypoint: /bin/sh
+  #   command: |
+  #     -c "set -xe;
+  #     redis-cli -a secret -h redis save
+  #     "
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - samba
   redis:
     # stop_grace_period: 1s
     build:
@@ -70,9 +69,9 @@ services:
     entrypoint: /bin/bash
     command: |
       -c 'set -xe;
-      mkdir -p /bitnami/redis/data/appendonlydir;
-      smbclient //203.0.112.2/Data -U samba%secret -c "mkdir bitnami-redis-data-appendonlydir";
-      mount -t cifs //203.0.112.2/Data/bitnami-redis-data-appendonlydir /bitnami/redis/data/appendonlydir -o username=samba,password=secret;
+      mkdir -p /bitnami/redis/data/backup-service;
+      smbclient //203.0.112.2/Data -U samba%secret -c "mkdir bitnami-redis-data-backup-service";
+      mount -t cifs //203.0.112.2/Data/bitnami-redis-data-backup-service /bitnami/redis/data/backup-service -o username=samba,password=secret;
       bash redis-backup-service.sh
       '
     environment:

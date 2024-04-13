@@ -8,20 +8,22 @@ export RANDOM=`date +%s`
 kompose convert -f ./docker-compose.yml
 FILE="samba-service.yaml samba-deployment.yaml samba-claim0-persistentvolumeclaim.yaml"
 for f in $FILE; do
-    kubectl apply -f $f
+    # kubectl apply -f $f
+    echo "kubectl apply -f $f"
 done
-CLUSTER_IP=$(kubectl get svc samba -o jsonpath='{.spec.clusterIP}')
-sed -i "s/203.0.112.2/$CLUSTER_IP/g" samba-client-pod.yaml
-kubectl delete pod samba-client || true
-kubectl apply -f samba-client-pod.yaml
+# CLUSTER_IP=$(kubectl get svc samba -o jsonpath='{.spec.clusterIP}')
+# sed -i "s/203.0.112.2/$CLUSTER_IP/g" samba-client-pod.yaml
+# kubectl delete pod samba-client || true
+# kubectl apply -f samba-client-pod.yaml
 docker-compose down
 mkdir -p ./samba-storage/
 chmod -R 0777 ./samba-storage/
-# docker-compose up -d samba
-# docker-compose up -d
+docker-compose up --build
 # docker-compose logs -f
+exit 0
 while true; do
-    kubectl logs pod/samba-client -f && break || true
+    # kubectl logs pod/samba-client -f && break || true
+    echo "Waiting for samba-client to start..."
     sleep 8
 done
-kubectl logs deployment/samba -f
+# kubectl logs deployment/samba -f
