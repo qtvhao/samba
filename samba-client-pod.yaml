@@ -15,11 +15,11 @@ spec:
         - |-
           set -xe;
           mkdir -p /mnt/smb_share;
-          smbclient //10.43.194.107/Data -U samba%secret -c 'mkdir test-pod';
-          mount -t cifs //10.43.194.107/Data/test-pod /mnt/smb_share -o username=samba,password=secret;
-          echo 'Hello, Samba!' > /mnt/smb_share/hello-23139.txt;
-          smbclient //10.43.194.107/Data -U samba%secret -c 'get test-pod/hello-23139.txt /hello-23139.txt';
-          cat /hello-23139.txt;
+          smbclient //203.0.112.2/Data -U samba%secret -c 'mkdir test-pod';
+          mount -t cifs //203.0.112.2/Data/test-pod /mnt/smb_share -o username=samba,password=secret;
+          echo 'Hello, Samba!' > /mnt/smb_share/hello-20028.txt;
+          smbclient //203.0.112.2/Data -U samba%secret -c 'get test-pod/hello-20028.txt /hello-20028.txt';
+          cat /hello-20028.txt;
       command:
         - /bin/sh
       image: ghcr.io/qtvhao/samba-client:main

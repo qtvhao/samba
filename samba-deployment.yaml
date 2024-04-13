@@ -34,6 +34,16 @@ spec:
             - name: USER
               value: samba
           image: dockurr/samba
+          livenessProbe:
+            exec:
+              command:
+                - nc
+                - -z
+                - localhost
+                - "445"
+            failureThreshold: 30
+            periodSeconds: 1
+            timeoutSeconds: 1
           name: samba
           ports:
             - containerPort: 445
@@ -43,6 +53,7 @@ spec:
             - mountPath: /storage
               name: samba-claim0
       restartPolicy: Always
+      terminationGracePeriodSeconds: 1
       volumes:
         - name: samba-claim0
           persistentVolumeClaim:
