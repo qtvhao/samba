@@ -11,8 +11,8 @@ services:
       GID: 1000    # Optional, default 1000
     ports:
       - 445:445
-    volumes:
-      - ./samba-storage/:/storage
+    # volumes:
+      # - ./samba-storage/:/storage
     restart: always
     networks:
       samba:
