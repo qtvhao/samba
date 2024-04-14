@@ -3,7 +3,7 @@ set -xeo pipefail
 
 _term() {
     echo "Caught SIGTERM signal! It means that the container is being stopped. Saving the database...";
-    redis-cli -a $REDIS_PASSWORD -h redis set hello world;
+    redis-cli -a $REDIS_PASSWORD -h localhost set hello world;
     redis-cli -a $REDIS_PASSWORD -h localhost save;
     cp /bitnami/redis/data/dump.rdb /bitnami/redis/data/backup-service/dump.rdb
     kill -TERM "$child"
