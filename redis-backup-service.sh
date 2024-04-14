@@ -17,8 +17,8 @@ if [ -f /bitnami/redis/data/backup-service/dump.rdb ]; then
 fi
 /opt/bitnami/scripts/redis/entrypoint.sh /opt/bitnami/scripts/redis/run.sh & child=$!
 sleep 2
-redis-cli -a $REDIS_PASSWORD -h redis get hello
-HELLO=`redis-cli -a $REDIS_PASSWORD -h redis get hello`
+redis-cli -a $REDIS_PASSWORD -h localhost get hello
+HELLO=`redis-cli -a $REDIS_PASSWORD -h localhost get hello` || true
 if [ "$HELLO" == "world" ]; then
     echo "Database is restored successfully!";
 else
