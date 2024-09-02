@@ -4,6 +4,10 @@ set -Eeuo pipefail
 # Set variables for group and share directory
 group="smb"
 share="/storage"
+secret="/run/secrets/pass"
+
+# Create shared directory
+mkdir -p "$share" || { echo "Failed to create directory $share"; exit 1; }
 
 # Check if the smb group exists, if not, create it
 if ! getent group "$group" &>/dev/null; then
@@ -21,41 +25,63 @@ OldGID=$(getent group "$group" | cut -d: -f3)
 
 # Change the UID and GID of the user and group if necessary
 if [[ "$OldUID" != "$UID" ]]; then
-    usermod -u "$UID" "$USER" || { echo "Failed to change UID for $USER"; exit 1; }
+    usermod -o -u "$UID" "$USER" || { echo "Failed to change UID for $USER"; exit 1; }
 fi
 
 if [[ "$OldGID" != "$GID" ]]; then
-    groupmod -g "$GID" "$group" || { echo "Failed to change GID for group $group"; exit 1; }
+    groupmod -o -g "$GID" "$group" || { echo "Failed to change GID for group $group"; exit 1; }
 fi
 
-# Change ownership of files and directories
-find / -path "$share" -prune -o -group "$OldGID" -exec chgrp -h "$group" {} \;
-find / -path "$share" -prune -o -user "$OldUID" -exec chown -h "$USER" {} \;
+# Check if an external config file was supplied
+config="/etc/samba/smb.conf"
+
+if [ -f "$config" ]; then
+
+    # Inform the user we are using a custom configuration file.
+    echo "Using provided configuration file: $config."
+
+else
+
+    config="/etc/samba/smb.tmp"
+    template="/etc/samba/smb.default"
+
+    # Generate a config file from template
+    rm -f "$config"
+    cp "$template" "$config"
+
+    # Update force user and force group in smb.conf
+    sed -i "s/^\(\s*\)force user =.*/\1force user = $USER/" "$config"
+    sed -i "s/^\(\s*\)force group =.*/\1force group = $group/" "$config"
+
+    # Verify if the RW variable is equal to false (indicating read-only mode) 
+    if [[ "$RW" == [Ff0]* ]]; then
+
+        # Adjust settings in smb.conf to set share to read-only
+        sed -i "s/^\(\s*\)writable =.*/\1writable = no/" "$config"
+        sed -i "s/^\(\s*\)read only =.*/\1read only = yes/" "$config"
+
+    else
+
+        # Set permissions for share directory if new (empty), leave untouched if otherwise
+        if [ -z "$(ls -A "$share")" ]; then
+          chmod 0770 "$share" || { echo "Failed to set permissions for directory $share"; exit 1; }
+          chown "$USER:$group" "$share" || { echo "Failed to set ownership for directory $share"; exit 1; }
+        fi
+
+    fi
+fi
+
+# Check if the secret file exists and if its size is greater than zero
+if [ -s "$secret" ]; then
+  PASS=$(cat "$secret")
+fi
 
 # Change Samba password
-echo -e "$PASS\n$PASS" | smbpasswd -a -s "$USER" || { echo "Failed to change Samba password for $USER"; exit 1; }
-
-rm -f /etc/samba/smb.custom
-cp /etc/samba/smb.conf /etc/samba/smb.custom
-
-# Update force user and force group in smb.conf
-sed -i "s/^\(\s*\)force user =.*/\1force user = $USER/" "/etc/samba/smb.custom"
-sed -i "s/^\(\s*\)force group =.*/\1force group = $group/" "/etc/samba/smb.custom"
-
-# Verify if the RW variable is not equal to true (indicating read-only mode) and adjust settings accordingly
-if [[ "$RW" != "true" ]]; then
-    sed -i "s/^\(\s*\)writable =.*/\1writable = no/" "/etc/samba/smb.custom"
-    sed -i "s/^\(\s*\)read only =.*/\1read only = yes/" "/etc/samba/smb.custom"
-fi
-
-# Create shared directory and set permissions
-mkdir -p "$share" || { echo "Failed to create directory $share"; exit 1; }
-chmod -R 0770 "$share" || { echo "Failed to set permissions for directory $share"; exit 1; }
-chown -R "$USER:$group" "$share" || { echo "Failed to set ownership for directory $share"; exit 1; }
+echo -e "$PASS\n$PASS" | smbpasswd -a -c "$config" -s "$USER" > /dev/null || { echo "Failed to change Samba password for $USER"; exit 1; }
 
 # Start the Samba daemon with the following options:
 #  --foreground: Run in the foreground instead of daemonizing.
 #  --debug-stdout: Send debug output to stdout.
 #  --debuglevel=1: Set debug verbosity level to 1.
 #  --no-process-group: Don't create a new process group for the daemon.
-exec smbd --configfile=/etc/samba/smb.custom --foreground --debug-stdout --debuglevel=1 --no-process-group
+exec smbd --configfile="$config" --foreground --debug-stdout --debuglevel=1 --no-process-group
