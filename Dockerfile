@@ -1,24 +1,25 @@
 FROM alpine:edge
 
-RUN apk --no-cache add \
-  tini \
-  bash \
-  samba \
-  tzdata \
-  shadow && \
-  addgroup -S smb && \
-  rm -rf /tmp/* /var/cache/apk/*
-  
-COPY smb.conf /etc/samba/smb.conf
+RUN set -eu && \
+    apk --no-cache add \
+    tini \
+    bash \
+    samba \
+    tzdata \
+    shadow && \
+    addgroup -S smb && \
+    rm -f /etc/samba/smb.conf && \
+    rm -rf /tmp/* /var/cache/apk/*
 
-COPY samba.sh /usr/bin/
-RUN chmod +x /usr/bin/samba.sh
+COPY --chmod=755 samba.sh /usr/bin/samba.sh
+COPY --chmod=664 smb.conf /etc/samba/smb.default
 
 VOLUME /storage
 EXPOSE 139 445
 
 ENV USER "samba"
 ENV PASS "secret"
+
 ENV UID 1000
 ENV GID 1000
 ENV RW true
